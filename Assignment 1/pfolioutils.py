@@ -19,6 +19,20 @@ def base_pfolio_optimizer(func, returns):
 
     return list(optimal['x'])
 
+def base_pfolio_optimizer_short(func, returns):   
+
+    bounds_lim = [(-1, 1) for _ in range(len(returns.columns))]
+    init = [1 / len(returns.columns) for _ in range(len(returns.columns))]
+    constraint = {'type': 'eq', 'fun': weight_cons}
+
+    optimal = minimize(fun=func,
+                        x0=init,
+                        bounds=bounds_lim,
+                        constraints=constraint,
+                        method='SLSQP')
+
+    return list(optimal['x'])
+
 def calculate_portfolio_stats(weights, mean_returns, cov_matrix):
     portfolio_return = np.dot(weights, mean_returns) * 250
     portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * np.sqrt(250)

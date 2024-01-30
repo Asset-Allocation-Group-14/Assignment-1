@@ -31,9 +31,17 @@ class Portfolio_Optimizer:
     def minimum_variance_weights(self):
         optimal = pfolioutils.base_pfolio_optimizer(self.find_port_std, self.returns) 
         return optimal
+    
+    def minimum_variance_weights_short(self):
+        optimal = pfolioutils.base_pfolio_optimizer_short(self.find_port_std, self.returns) 
+        return optimal
 
     def maximum_sharpe_weights(self):
         optimal = pfolioutils.base_pfolio_optimizer(self.sharpe_func, self.returns) 
+        return optimal
+    
+    def maximum_sharpe_weights_short(self):
+        optimal = pfolioutils.base_pfolio_optimizer_short(self.sharpe_func, self.returns) 
         return optimal
     
     def plot_performance(self, prices: pd.DataFrame, custom_weights: dict = None, rolling_window = False):
