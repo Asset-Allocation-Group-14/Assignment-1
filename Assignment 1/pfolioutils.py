@@ -1,13 +1,21 @@
 import numpy as np
 from scipy.optimize import minimize
+import pandas as pd
+
+import matplotlib.pyplot as plt
 
 def weight_cons(weights):
     return np.sum(weights) - 1
 
 
-def base_pfolio_optimizer(func, returns):   
+def base_pfolio_optimizer(func, returns, short = False):   
 
-    bounds_lim = [(0, 1) for _ in range(len(returns.columns))]
+    weight_costraint =  (0,1)
+
+    if short:
+        weight_costraint = (-1,1)
+
+    bounds_lim = [weight_costraint for _ in range(len(returns.columns))]
     init = [1 / len(returns.columns) for _ in range(len(returns.columns))]
     constraint = {'type': 'eq', 'fun': weight_cons}
 
@@ -29,21 +37,22 @@ def generate_random_portfolios(num_portfolios, mean_returns, cov_returns):
     results = np.zeros((2, num_portfolios))
 
     for i in range(num_portfolios):
-        weights = np.random.random(len(mean_returns))
+        weights = np.random.uniform(size=len(mean_returns))
         weights /= np.sum(weights)  # Ensure weights sum to 1
 
-        portfolio_log_return, portfolio_volatility = calculate_portfolio_stats(weights, mean_returns, cov_returns)
+        portfolio_return, portfolio_volatility = calculate_portfolio_stats(weights, mean_returns, cov_returns)
 
-        results[0, i] = portfolio_log_return
+        results[0, i] = portfolio_return
         results[1, i] = portfolio_volatility
 
     return results
 
 
-def calculate_stats(pfolio):
-    returns = pfolio.pct_change().dropna()
-    mu = returns.mean()*250
-    sigma = returns.std()* np.sqrt(250)
+def calculate_stats(pfolio, is_ret = True):
+    if not is_ret:
+        pfolio = pfolio.pct_change().dropna()
+    mu = pfolio.mean()*250
+    sigma = pfolio.std()* np.sqrt(250)
     sharpe = mu/sigma
     return (mu, sigma, sharpe)
 
@@ -62,5 +71,3 @@ def evaluate_strategies(strategies):
     print("   - Return:", calculate_stats(strategies['Mkt_Cap_performance'])[0])
     print("   - Standard Deviation (Risk):", calculate_stats(strategies['Mkt_Cap_performance'])[1])
     print("   - Sharpe Ratio:", calculate_stats(strategies['Mkt_Cap_performance'])[2])
-
-

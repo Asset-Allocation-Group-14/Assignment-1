@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 class Portfolio_Optimizer:
-    def __init__(self, returns: pd.DataFrame):
+    def __init__(self, returns: pd.DataFrame, short = False):
         self.returns = returns
         self.cov = returns.cov()
         self.mu = returns.mean()
-        self.min_variance_weights = self.minimum_variance_weights()
-        self.max_sharpe_weights = self.maximum_sharpe_weights()
+        self.min_variance_weights = self.minimum_variance_weights(short)
+        self.max_sharpe_weights = self.maximum_sharpe_weights(short)
         self.equal_weights = [1/len(returns.columns)]*len(returns.columns)
     
     def calculate_portfolio_stats(self, weights):
@@ -26,12 +26,12 @@ class Portfolio_Optimizer:
         port_ret, port_std = self.calculate_portfolio_stats(weights)
         return -1 * port_ret / port_std
     
-    def minimum_variance_weights(self):
-        optimal = pfolioutils.base_pfolio_optimizer(self.find_port_std, self.returns) 
+    def minimum_variance_weights(self, short = False):
+        optimal = pfolioutils.base_pfolio_optimizer(self.find_port_std, self.returns, short) 
         return optimal
 
-    def maximum_sharpe_weights(self):
-        optimal = pfolioutils.base_pfolio_optimizer(self.sharpe_func, self.returns) 
+    def maximum_sharpe_weights(self, short = False):
+        optimal = pfolioutils.base_pfolio_optimizer(self.sharpe_func, self.returns, short) 
         return optimal
     
     def plot_performance(self, prices: pd.DataFrame, custom_weights: dict = None, rolling_window = False):
@@ -102,12 +102,18 @@ class Portfolio_Optimizer:
             print("Max Sharpe Portfolio:")
             print("   - Return:", max_sharpe_ret)
             print("   - Standard Deviation (Risk):", max_sharpe_std)
+            print("   - Sharpe Ratio:", max_sharpe_ret/max_sharpe_std)
+
             print("\nMin Variance Portfolio:")
             print("   - Return:", min_var_ret)
             print("   - Standard Deviation (Risk):", min_var_std)
+            print("   - Sharpe Ratio:", min_var_ret/min_var_std)
+
             print("\nEqual Weight Portfolio:")
             print("   - Return:", equal_w_ret)
             print("   - Standard Deviation (Risk):", equal_w_std)
+            print("   - Sharpe Ratio:", equal_w_ret/equal_w_std)
+
 
         if custom_weights:
             for key, weights in custom_weights.items():
@@ -116,5 +122,13 @@ class Portfolio_Optimizer:
                 print(f"\n{key}:")
                 print("   - Return:", custom_ret)
                 print("   - Standard Deviation (Risk):", custom_std)
+                print("   - Sharpe Ratio:", custom_ret/custom_std)
+    
+    def print_all_weights(self):
+        data = {'Indices': list(self.returns.columns), 'Min Variance Portfolio Weights': self.min_variance_weights, 'Max Sharpe Portfolio Weights': self.max_sharpe_weights}
+        df = pd.DataFrame(data)
+
+        print(df)
+
 
 
