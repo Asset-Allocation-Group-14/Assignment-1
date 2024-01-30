@@ -2,6 +2,8 @@ import numpy as np
 import pfolioutils
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.interpolate import splprep, splev
+from scipy.interpolate import interp1d
 
 class Portfolio_Optimizer:
     def __init__(self, returns: pd.DataFrame):
@@ -57,7 +59,7 @@ class Portfolio_Optimizer:
             plt.plot(prices.index, cum_returns_min_variance, label='Min Variance Portfolio')
             plt.plot(prices.index, cum_returns_max_sharpe, label='Max Sharpe Portfolio')
             plt.plot(prices.index, cum_returns_equal_weights, label='Equal Weight Portfolio')
-            
+        
         plt.title('Portfolio Performances Over Time')
         plt.xlabel('Date')
         plt.ylabel('Cumulative Returns')
@@ -75,14 +77,22 @@ class Portfolio_Optimizer:
         min_var_ret, min_var_std = self.calculate_portfolio_stats(np.array(self.min_variance_weights))
         equal_w_ret, equal_w_std = self.calculate_portfolio_stats(np.array(self.equal_weights))
 
+        # Generate interpolation function
+        tck, u = splprep(np.array([
+                           [max_sharpe_std, min_var_std, equal_w_std],[max_sharpe_ret, min_var_ret, equal_w_ret]]), u=None, k=2, s=0)
+        new_points = splev(np.linspace(0, 1, 100), tck)
+
+
         # Plot the efficient frontier
         plt.figure(figsize=(10, 6))
         plt.scatter(random_portfolios[1, :], random_portfolios[0, :], c=(random_portfolios[0, :]) / random_portfolios[1, :], cmap='viridis', marker='o', s=10, label='Random Portfolios')
         plt.scatter(max_sharpe_std, max_sharpe_ret, color='red', marker='*', s=100, label='Max Sharpe Portfolio')
         plt.scatter(min_var_std, min_var_ret, color='green', marker='*', s=100, label='Min Variance Portfolio')
         plt.scatter(equal_w_std, equal_w_ret, color='blue', marker='*', s=100, label='Equal Weight Portfolio')
+        plt.plot(new_points[0], new_points[1], color='black', linestyle='-', linewidth=2, label='Smooth Curve')
 
         plt.title('Efficient Frontier with Random Portfolios and Specific Points')
+        plt.xlim(0,0.8)
         plt.xlabel('Volatility (Log Returns)')
         plt.ylabel('Return (Log Returns)')
         plt.legend()
