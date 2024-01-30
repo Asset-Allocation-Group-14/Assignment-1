@@ -34,7 +34,7 @@ class Portfolio_Optimizer:
         optimal = pfolioutils.base_pfolio_optimizer(self.sharpe_func, self.returns) 
         return optimal
     
-    def plot_performance(self, prices: pd.DataFrame, custom_weights: dict = None):
+    def plot_performance(self, prices: pd.DataFrame, custom_weights: dict = None, rolling_window = False):
         prices = (prices - prices.iloc[0])/prices.iloc[0]
         prices['date'] = pd.to_datetime(prices.index)
         prices.set_index('date', inplace=True)
@@ -53,11 +53,11 @@ class Portfolio_Optimizer:
                 custom_returns = np.dot(prices, weights)
                 plt.plot(prices.index, custom_returns, label=key)
 
-        
-        plt.plot(prices.index, cum_returns_min_variance, label='Min Variance Portfolio')
-        plt.plot(prices.index, cum_returns_max_sharpe, label='Max Sharpe Portfolio')
-        plt.plot(prices.index, cum_returns_equal_weights, label='Equal Weight Portfolio')
-        
+        if not rolling_window:
+            plt.plot(prices.index, cum_returns_min_variance, label='Min Variance Portfolio')
+            plt.plot(prices.index, cum_returns_max_sharpe, label='Max Sharpe Portfolio')
+            plt.plot(prices.index, cum_returns_equal_weights, label='Equal Weight Portfolio')
+            
         plt.title('Portfolio Performances Over Time')
         plt.xlabel('Date')
         plt.ylabel('Cumulative Returns')
@@ -91,22 +91,23 @@ class Portfolio_Optimizer:
 
         
 
-    def performance_summary(self, custom_weights: dict = None):
+    def performance_summary(self, custom_weights: dict = None, rolling_window=False):
         # Calculate performance metrics for portfolios
         max_sharpe_ret, max_sharpe_std = self.calculate_portfolio_stats(np.array(self.max_sharpe_weights))
         min_var_ret, min_var_std = self.calculate_portfolio_stats(np.array(self.min_variance_weights))
         equal_w_ret, equal_w_std = self.calculate_portfolio_stats(np.array(self.equal_weights))
 
-        # Print or return the performance summary
-        print("Max Sharpe Portfolio:")
-        print("   - Return:", max_sharpe_ret)
-        print("   - Standard Deviation (Risk):", max_sharpe_std)
-        print("\nMin Variance Portfolio:")
-        print("   - Return:", min_var_ret)
-        print("   - Standard Deviation (Risk):", min_var_std)
-        print("\nEqual Weight Portfolio:")
-        print("   - Return:", equal_w_ret)
-        print("   - Standard Deviation (Risk):", equal_w_std)
+        if not rolling_window:
+            # Print or return the performance summary
+            print("Max Sharpe Portfolio:")
+            print("   - Return:", max_sharpe_ret)
+            print("   - Standard Deviation (Risk):", max_sharpe_std)
+            print("\nMin Variance Portfolio:")
+            print("   - Return:", min_var_ret)
+            print("   - Standard Deviation (Risk):", min_var_std)
+            print("\nEqual Weight Portfolio:")
+            print("   - Return:", equal_w_ret)
+            print("   - Standard Deviation (Risk):", equal_w_std)
 
         if custom_weights:
             for key, weights in custom_weights.items():
