@@ -38,3 +38,29 @@ def generate_random_portfolios(num_portfolios, mean_returns, cov_returns):
         results[1, i] = portfolio_volatility
 
     return results
+
+
+def calculate_stats(pfolio):
+    returns = pfolio.pct_change().dropna()
+    mu = returns.mean()*250
+    sigma = returns.std()* np.sqrt(250)
+    sharpe = mu/sigma
+    return (mu, sigma, sharpe)
+
+
+
+def evaluate_strategies(strategies):
+    print("Max Sharpe Portfolio:")
+    print("   - Return:", calculate_stats(strategies['Max_Sharpe_performance'])[0])
+    print("   - Standard Deviation (Risk):", calculate_stats(strategies['Max_Sharpe_performance'])[1])
+    print("   - Sharpe Ratio:", calculate_stats(strategies['Max_Sharpe_performance'])[2])
+    print("\nMin Variance Portfolio:")
+    print("   - Return:", calculate_stats(strategies['Min_Var_Sharpe_performance'])[0])
+    print("   - Standard Deviation (Risk):", calculate_stats(strategies['Min_Var_Sharpe_performance'])[1])
+    print("   - Sharpe Ratio:", calculate_stats(strategies['Min_Var_Sharpe_performance'])[2])
+    print("\nMkt Cap Weight Portfolio:")
+    print("   - Return:", calculate_stats(strategies['Mkt_Cap_performance'])[0])
+    print("   - Standard Deviation (Risk):", calculate_stats(strategies['Mkt_Cap_performance'])[1])
+    print("   - Sharpe Ratio:", calculate_stats(strategies['Mkt_Cap_performance'])[2])
+
+
