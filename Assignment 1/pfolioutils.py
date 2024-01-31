@@ -74,29 +74,11 @@ def evaluate_strategies(strategies):
     print("   - Standard Deviation (Risk):", calculate_stats(strategies['Mkt_Cap_performance'])[1])
     print("   - Sharpe Ratio:", calculate_stats(strategies['Mkt_Cap_performance'])[2])
 
-'''
-def plot_weight_matrices(weight_matrix, xlabs, title):
-
-    # Plotting the heatmap of the difference matrix
-    plt.imshow(weight_matrix, cmap='RdYlGn', interpolation='none')
-    # Add annotations
-    for i in range(len(weight_matrix)):
-        for j in range(len(weight_matrix[0])):
-            plt.text(j, i, f'{weight_matrix[i, j]:.2f}', ha='center', va='center', color='black')
-
-    plt.colorbar(label='Difference')
-    plt.title(title)
-    plt.xlabel('Indices')
-    plt.ylabel('Years')
-    plt.xticks(range(len(weight_matrix[0])), labels=[s.split()[0] for s in xlabs], fontsize=9)
-    plt.yticks(range(len(weight_matrix)), labels=[str(year) for year in range(2013, 2023)])
-    plt.show()
-'''
 
 def plot_weight_matrices(weight_matrices, xlabs, titles):
     num_matrices = len(weight_matrices)
 
-    fig, axes = plt.subplots(1, num_matrices, figsize=(10, 6), sharey=True)
+    fig, axes = plt.subplots(1, num_matrices, figsize=(15, 5), sharey=True)
 
     for i in range(num_matrices):
         # Plotting the heatmap of the weight matrix
@@ -114,7 +96,6 @@ def plot_weight_matrices(weight_matrices, xlabs, titles):
     fig.colorbar(im, ax=axes, label='Difference')
     axes[0].set_ylabel('Years')
     axes[0].set_yticks(range(len(weight_matrices[0])), labels=[str(year) for year in range(2013, 2023)])
-    plt.figure(figsize=(8, 4.8))
     plt.show()
 
 
@@ -122,7 +103,7 @@ def plot_rolling_performance(portfolio_data, rw_returns_df):
     performance_df = (1+ portfolio_data).cumprod() -1
 
     # Plot portfolio performance
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(8, 4.8))
     plt.plot(performance_df['Max_Sharpe_performance'], label='Max Sharpe Portfolio')
     plt.plot(performance_df['Min_Var_Sharpe_performance'], label='Min Variance Portfolio')
     plt.plot(performance_df['Mkt_Cap_performance'], label='Mkt Cap Weighted Portfolio')

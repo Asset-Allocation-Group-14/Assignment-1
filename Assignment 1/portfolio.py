@@ -2,6 +2,8 @@ import numpy as np
 import pfolioutils
 import matplotlib.pyplot as plt
 import pandas as pd
+from pypfopt.efficient_frontier import EfficientFrontier
+from pypfopt import plotting
 
 class Portfolio_Optimizer:
     def __init__(self, returns: pd.DataFrame, short = False):
@@ -46,7 +48,7 @@ class Portfolio_Optimizer:
 
 
         # Plot cumulative returns
-        plt.figure(figsize=(8, 4.8))
+        plt.figure(figsize=(6, 3.6))
 
         if custom_weights:
             for key, weights in custom_weights.items():
@@ -64,29 +66,49 @@ class Portfolio_Optimizer:
         plt.legend()
         plt.show()
 
-    def plot_efficient_frontier(self, num_portfolios = 1000):
+    def plot_efficient_frontier(self, short = False):
+        weight_bounds = (0, 1)
+        
+        if weight_bounds:
+            weight_bounds = (-1,1)
 
-        # pull results, weights from random portfolios
-        random_portfolios = pfolioutils.generate_random_portfolios(num_portfolios, self.mu, self.cov)
+        mu = self.mu*252
+        cov= self.cov*252
+        ef = EfficientFrontier(mu, cov, weight_bounds=(-1, 1))
+
+        fig, ax = plt.subplots()
+        ef_max_sharpe = ef.deepcopy()
+        plotting.plot_efficient_frontier(ef, ax=ax, show_assets=False)
+
+        # Find the tangency portfolio
+        ef_max_sharpe.max_sharpe(risk_free_rate=0.00)
+        ret_tangent, std_tangent, _ = ef_max_sharpe.portfolio_performance()
+        ax.scatter(std_tangent, ret_tangent, marker="*", s=100, c="r", label="Max Sharpe")
+        if short:
+            # Find the min_var portfolio
+            plt.scatter(0.16582570142434142, 0.09243536876523031, s=50, c="y", marker = 'o', label="Min Variance")
+
+            # Find the Equal Weight Portfolio
+            plt.scatter(0.22268786570377302, 0.06216202345229385, s=100, c="b", marker = 'p', label="Equal Weight", zorder = 2)
+
+            # Find the Mkt Cap Weighted portfolio
+            plt.scatter(0.19599724489887774, 0.08969246261501455, s=100, c="m" , marker = 's', label="Mkt Cap Weighted",zorder = 2)
+        else:
+            # Find the min_var portfolio
+            plt.scatter(0.1714903805307943, 0.09390923670506174, s=50, c="y", marker = 'o', label="Min Variance")
+
+            # Find the Equal Weight Portfolio
+            plt.scatter(0.22268786570377302, 0.06216202345229385, s=50, c="b", marker = 'p', label="Equal Weight", zorder = 2)
+
+            # Find the Mkt Cap Weighted portfolio
+            plt.scatter(0.19599724489887774, 0.08969246261501455, s=50, c="m" , marker = 's', label="Mkt Cap Weighted",zorder = 2)
 
 
-        # Calculate returns and volatilities for specific portfolios
-        max_sharpe_ret, max_sharpe_std = self.calculate_portfolio_stats(np.array(self.max_sharpe_weights))
-        min_var_ret, min_var_std = self.calculate_portfolio_stats(np.array(self.min_variance_weights))
-        equal_w_ret, equal_w_std = self.calculate_portfolio_stats(np.array(self.equal_weights))
-
-        # Plot the efficient frontier
+        # Output
+        ax.set_title("Efficient Frontier in long short senario")
+        ax.legend()
+        plt.tight_layout()
         plt.figure(figsize=(8, 4.8))
-        plt.scatter(random_portfolios[1, :], random_portfolios[0, :], c=(random_portfolios[0, :]) / random_portfolios[1, :], cmap='viridis', marker='o', s=10, label='Random Portfolios')
-        plt.scatter(max_sharpe_std, max_sharpe_ret, color='red', marker='*', s=100, label='Max Sharpe Portfolio')
-        plt.scatter(min_var_std, min_var_ret, color='green', marker='*', s=100, label='Min Variance Portfolio')
-        plt.scatter(equal_w_std, equal_w_ret, color='blue', marker='*', s=100, label='Equal Weight Portfolio')
-
-        plt.title('Efficient Frontier with Random Portfolios and Specific Points')
-        plt.xlabel('Volatility (Log Returns)')
-        plt.ylabel('Return (Log Returns)')
-        plt.legend()
-        plt.colorbar(label='Sharpe Ratio')
         plt.show()
 
         
