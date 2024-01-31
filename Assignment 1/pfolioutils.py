@@ -71,3 +71,21 @@ def evaluate_strategies(strategies):
     print("   - Return:", calculate_stats(strategies['Mkt_Cap_performance'])[0])
     print("   - Standard Deviation (Risk):", calculate_stats(strategies['Mkt_Cap_performance'])[1])
     print("   - Sharpe Ratio:", calculate_stats(strategies['Mkt_Cap_performance'])[2])
+
+
+def plot_weight_matrices(weight_matrix, xlabs, title):
+
+    # Plotting the heatmap of the difference matrix
+    plt.imshow(weight_matrix, cmap='RdYlGn', interpolation='none')
+    # Add annotations
+    for i in range(len(weight_matrix)):
+        for j in range(len(weight_matrix[0])):
+            plt.text(j, i, f'{weight_matrix[i, j]:.2f}', ha='center', va='center', color='black')
+
+    plt.colorbar(label='Difference')
+    plt.title(title)
+    plt.xlabel('Indices')
+    plt.ylabel('Years')
+    plt.xticks(range(len(weight_matrix[0])), labels=[s.split()[0] for s in xlabs], fontsize=9)
+    plt.yticks(range(len(weight_matrix)), labels=[str(year) for year in range(2013, 2023)])
+    plt.show()
