@@ -46,7 +46,7 @@ class Portfolio_Optimizer:
 
 
         # Plot cumulative returns
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(8, 4.8))
 
         if custom_weights:
             for key, weights in custom_weights.items():
@@ -76,7 +76,7 @@ class Portfolio_Optimizer:
         equal_w_ret, equal_w_std = self.calculate_portfolio_stats(np.array(self.equal_weights))
 
         # Plot the efficient frontier
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(8, 4.8))
         plt.scatter(random_portfolios[1, :], random_portfolios[0, :], c=(random_portfolios[0, :]) / random_portfolios[1, :], cmap='viridis', marker='o', s=10, label='Random Portfolios')
         plt.scatter(max_sharpe_std, max_sharpe_ret, color='red', marker='*', s=100, label='Max Sharpe Portfolio')
         plt.scatter(min_var_std, min_var_ret, color='green', marker='*', s=100, label='Min Variance Portfolio')
@@ -132,3 +132,59 @@ class Portfolio_Optimizer:
 
 
 
+
+
+def get_rolling_weights(returns_df, weight_df):
+    rw_returns_df = returns_df.loc['01/04/2008':]
+
+
+    rw_returns_df.index = pd.to_datetime(rw_returns_df.index)
+
+
+    # Initialize empty DataFrames to store performance values
+    min_var_df = pd.DataFrame(index=rw_returns_df.index, columns=['Min_Var_Sharpe_performance'])
+    max_sharpe_df = pd.DataFrame(index=rw_returns_df.index, columns=['Max_Sharpe_performance'])
+    mkt_cap_df = pd.DataFrame(index=rw_returns_df.index, columns=['Mkt_Cap_performance'])
+
+    min_var_weights_df = []
+    max_sharpe_weights_df = []
+    mkt_cap_weights_df = []
+
+    # Iterate through each rolling window
+    for year_start in range(2012, 2022):  # Adjust the start year accordingly
+        # Define the start and end dates for the current window
+        start_date = rw_returns_df.index[rw_returns_df.index.year == year_start - 4].min()
+        end_date = rw_returns_df.index[rw_returns_df.index.year == year_start].max()
+
+        # Extract the data for the previous 5 years
+        prev_window_data = rw_returns_df.loc[start_date:end_date]
+
+        # Calculate weights for the previous 5 years
+        tmp_portfolio = Portfolio_Optimizer(prev_window_data)
+
+        min_var_weights = tmp_portfolio.min_variance_weights
+        min_var_weights_df.append(min_var_weights)
+        
+        max_sharpe_weights = tmp_portfolio.max_sharpe_weights
+        max_sharpe_weights_df.append(max_sharpe_weights)
+
+
+        mkt_cap_weights_df.append(np.array(weight_df['MktCap%'])
+    )
+
+        # Extract the data for the current year
+        current_window_data = rw_returns_df.loc[start_date:end_date]
+
+        # Calculate performance for the current year and store in DataFrames
+        min_var_df.loc[start_date:end_date, 'Min_Var_Sharpe_performance'] = np.dot(current_window_data, min_var_weights)
+        max_sharpe_df.loc[start_date:end_date, 'Max_Sharpe_performance'] = np.dot(current_window_data, max_sharpe_weights)
+        mkt_cap_df.loc[start_date:end_date, 'Mkt_Cap_performance'] = np.dot(current_window_data, weight_df['MktCap%'])
+
+
+    # Optionally, concatenate the DataFrames horizontally if needed
+    portfolio_data = pd.concat([max_sharpe_df, min_var_df, mkt_cap_df], axis=1)
+
+    # Filter data from 2013 onwards
+    portfolio_data = portfolio_data.loc['2013':]
+
+    return portfolio_data, mkt_cap_weights_df, max_sharpe_weights_df, rw_returns_df
